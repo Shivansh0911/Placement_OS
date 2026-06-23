@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/uipath-orchestrator-project-settings",
+  "name": "ERPFetchBot",
+  "description": "Fetches eligible students from the college ERP API based on placement drive eligibility criteria. Called by PlacementOS BPMN process as a service task.",
+  "main": "Main.xaml",
+  "outputType": "Process",
+  "expressionLanguage": "VisualBasic",
+  "targetFramework": "Portable",
+  "runtimeOptions": {
+    "requiresUserInteraction": false,
+    "supportsPersistence": false,
+    "excludedLoggedData": [],
+    "executionType": "Workflow",
+    "readyForPiP": false,
+    "mustRestoreAllDependencies": true
+  },
+  "dependencies": {
+    "UiPath.System.Activities": "[23.10.3, )",
+    "UiPath.WebAPI.Activities": "[1.16.1, )"
+  },
+  "libraryOptions": {
+    "includeOriginalXaml": false,
+    "privateWorkflows": []
+  },
+  "publishData": {},
+  "templateProjectData": {}
+}

@@ -1,0 +1,103 @@
+{
+  "formName": "HR Interview Results",
+  "formVersion": "1.0.0",
+  "description": "Displayed to Company HR in UiPath Action Center after interviews are complete. HR enters per-candidate outcomes.",
+  "assigneeRole": "company_hr_role",
+  "fields": [
+    {
+      "name": "company_name",
+      "label": "Company",
+      "type": "text",
+      "readOnly": true
+    },
+    {
+      "name": "drive_id",
+      "label": "Drive ID",
+      "type": "text",
+      "readOnly": true
+    },
+    {
+      "name": "interview_date",
+      "label": "Interview Date",
+      "type": "text",
+      "readOnly": true
+    },
+    {
+      "name": "candidate_results",
+      "label": "Candidate Interview Outcomes",
+      "type": "editabledatagrid",
+      "required": true,
+      "description": "Enter the outcome for each candidate. All rows must be completed before submission.",
+      "columns": [
+        {
+          "key": "student_id",
+          "header": "Student ID",
+          "type": "text",
+          "readOnly": true
+        },
+        {
+          "key": "name",
+          "header": "Name",
+          "type": "text",
+          "readOnly": true
+        },
+        {
+          "key": "branch",
+          "header": "Branch",
+          "type": "text",
+          "readOnly": true
+        },
+        {
+          "key": "result",
+          "header": "Result",
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            { "value": "Selected", "label": "Selected" },
+            { "value": "Not Selected", "label": "Not Selected" },
+            { "value": "Waitlist", "label": "Waitlist" }
+          ]
+        },
+        {
+          "key": "offered_role",
+          "header": "Role Offered",
+          "type": "text",
+          "required": false,
+          "visibilityCondition": "result == 'Selected'",
+          "placeholder": "e.g. Software Development Engineer I"
+        },
+        {
+          "key": "package_lpa",
+          "header": "Package (LPA)",
+          "type": "number",
+          "required": false,
+          "visibilityCondition": "result == 'Selected'",
+          "placeholder": "e.g. 12.5"
+        },
+        {
+          "key": "joining_date",
+          "header": "Joining Date",
+          "type": "date",
+          "required": false,
+          "visibilityCondition": "result == 'Selected'"
+        },
+        {
+          "key": "feedback",
+          "header": "Feedback",
+          "type": "text",
+          "required": false,
+          "placeholder": "Visible to candidate on rejection email"
+        }
+      ]
+    },
+    {
+      "name": "hr_summary_notes",
+      "label": "Overall Drive Summary (optional)",
+      "type": "textarea",
+      "placeholder": "Any comments about the drive quality, candidate pool, logistics, etc."
+    }
+  ],
+  "outputVariables": {
+    "candidate_results": "maps to process variable: interview_results (JSON array of outcome objects)"
+  }
+}

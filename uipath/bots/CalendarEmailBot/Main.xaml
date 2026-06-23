@@ -1,0 +1,160 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="UiPath.Process" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:mail="http://schemas.uipath.com/mail/activities">
+  <!--
+    CalendarEmailBot — Main.xaml
+    For each shortlisted candidate:
+      1. Creates a Google Calendar event (if Calendar creds available)
+      2. Sends an HTML confirmation email via SMTP
+
+    INPUT  (Process Arguments — In):
+      in_ShortlistedStudentsJson : String  — JSON array of student objects (from ERP)
+      in_InterviewScheduleJson   : String  — JSON: {"date":"2024-02-15","time":"10:00","mode":"Online","link":"https://meet.google.com/xxx","panel":"John Smith, Jane Doe"}
+      in_CompanyName             : String
+      in_DriveId                 : String
+      in_SmtpHost                : String  — e.g. smtp.gmail.com
+      in_SmtpPort                : Int32   — e.g. 587
+      in_SmtpUser                : String
+      in_SmtpPassword            : String  — stored in Orchestrator credential store
+      in_GoogleCalendarApiKey    : String  — OAuth2 token (optional; skip calendar if empty)
+
+    OUTPUT:
+      out_EmailsSent             : Int32
+      out_CalendarEventsCreated  : Int32
+  -->
+  <x:Members>
+    <x:Property Name="in_ShortlistedStudentsJson" Type="InArgument(x:String)"/>
+    <x:Property Name="in_InterviewScheduleJson" Type="InArgument(x:String)"/>
+    <x:Property Name="in_CompanyName" Type="InArgument(x:String)"/>
+    <x:Property Name="in_DriveId" Type="InArgument(x:String)"/>
+    <x:Property Name="in_SmtpHost" Type="InArgument(x:String)"/>
+    <x:Property Name="in_SmtpPort" Type="InArgument(x:Int32)"/>
+    <x:Property Name="in_SmtpUser" Type="InArgument(x:String)"/>
+    <x:Property Name="in_SmtpPassword" Type="InArgument(x:String)"/>
+    <x:Property Name="in_GoogleCalendarApiKey" Type="InArgument(x:String)"/>
+    <x:Property Name="out_EmailsSent" Type="OutArgument(x:Int32)"/>
+    <x:Property Name="out_CalendarEventsCreated" Type="OutArgument(x:Int32)"/>
+  </x:Members>
+
+  <Sequence DisplayName="CalendarEmailBot — Interview Confirmations" sap2010:WorkflowViewState.IdRef="Seq_Root">
+    <Sequence.Variables>
+      <Variable Name="students" Type="Newtonsoft.Json.Linq.JArray"/>
+      <Variable Name="schedule" Type="Newtonsoft.Json.Linq.JObject"/>
+      <Variable Name="emailsSent" Type="x:Int32" Default="0"/>
+      <Variable Name="calendarCreated" Type="x:Int32" Default="0"/>
+    </Sequence.Variables>
+
+    <ui:LogMessage Level="Info" Message="{'[CalendarEmailBot] Starting for drive: ' + in_DriveId + ', company: ' + in_CompanyName}"/>
+
+    <!-- Parse JSON inputs -->
+    <ui:InvokeCode DisplayName="Parse JSON Inputs">
+      <ui:InvokeCode.Code>
+        students = Newtonsoft.Json.Linq.JArray.Parse(in_ShortlistedStudentsJson)
+        schedule = Newtonsoft.Json.Linq.JObject.Parse(in_InterviewScheduleJson)
+      </ui:InvokeCode.Code>
+    </ui:InvokeCode>
+
+    <ui:LogMessage Level="Info" Message="{'[CalendarEmailBot] Processing ' + students.Count.ToString() + ' candidates.'}"/>
+
+    <!-- Loop over each shortlisted student -->
+    <ForEach x:TypeArguments="Newtonsoft.Json.Linq.JToken" DisplayName="For Each Shortlisted Candidate" Values="[students]">
+      <ActivityAction x:TypeArguments="Newtonsoft.Json.Linq.JToken">
+        <ActivityAction.Argument>
+          <DelegateInArgument Name="studentToken"/>
+        </ActivityAction.Argument>
+        <Sequence DisplayName="Process Candidate">
+          <Sequence.Variables>
+            <Variable Name="studentName" Type="x:String"/>
+            <Variable Name="studentEmail" Type="x:String"/>
+            <Variable Name="emailBody" Type="x:String"/>
+            <Variable Name="interviewDate" Type="x:String"/>
+            <Variable Name="interviewTime" Type="x:String"/>
+            <Variable Name="interviewMode" Type="x:String"/>
+            <Variable Name="venueOrLink" Type="x:String"/>
+          </Sequence.Variables>
+
+          <ui:InvokeCode DisplayName="Extract Student Fields">
+            <ui:InvokeCode.Code>
+              Dim student = CType(studentToken, Newtonsoft.Json.Linq.JObject)
+              studentName = student("name").ToString()
+              studentEmail = student("email").ToString()
+              interviewDate = schedule("date").ToString()
+              interviewTime = schedule("time").ToString()
+              interviewMode = schedule("mode").ToString()
+              venueOrLink = If(schedule("link") IsNot Nothing, schedule("link").ToString(), If(schedule("venue") IsNot Nothing, schedule("venue").ToString(), "TBD"))
+            </ui:InvokeCode.Code>
+          </ui:InvokeCode>
+
+          <!-- Build email HTML -->
+          <ui:InvokeCode DisplayName="Build Email Body HTML">
+            <ui:InvokeCode.Code>
+              emailBody = "
+&lt;html&gt;&lt;body style='font-family: Arial, sans-serif; color: #222;'&gt;
+&lt;div style='max-width:600px;margin:0 auto;'&gt;
+&lt;div style='background:#1a3c5e;color:#fff;padding:20px 30px;border-radius:8px 8px 0 0'&gt;
+  &lt;h2 style='margin:0'&gt;Interview Confirmation&lt;/h2&gt;
+  &lt;p style='margin:4px 0 0;opacity:.8'&gt;" + in_CompanyName + " Campus Placement Drive&lt;/p&gt;
+&lt;/div&gt;
+&lt;div style='background:#fff;border:1px solid #ddd;border-top:none;padding:30px;border-radius:0 0 8px 8px'&gt;
+  &lt;p&gt;Dear &lt;strong&gt;" + studentName + "&lt;/strong&gt;,&lt;/p&gt;
+  &lt;p&gt;Congratulations! You have been shortlisted for the " + in_CompanyName + " placement drive.&lt;/p&gt;
+  &lt;table style='width:100%;border-collapse:collapse;margin:20px 0'&gt;
+    &lt;tr&gt;&lt;td style='padding:8px;background:#f5f5f5;border:1px solid #ddd'&gt;&lt;strong&gt;Date&lt;/strong&gt;&lt;/td&gt;
+        &lt;td style='padding:8px;border:1px solid #ddd'&gt;" + interviewDate + "&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td style='padding:8px;background:#f5f5f5;border:1px solid #ddd'&gt;&lt;strong&gt;Time&lt;/strong&gt;&lt;/td&gt;
+        &lt;td style='padding:8px;border:1px solid #ddd'&gt;" + interviewTime + " IST&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td style='padding:8px;background:#f5f5f5;border:1px solid #ddd'&gt;&lt;strong&gt;Mode&lt;/strong&gt;&lt;/td&gt;
+        &lt;td style='padding:8px;border:1px solid #ddd'&gt;" + interviewMode + "&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td style='padding:8px;background:#f5f5f5;border:1px solid #ddd'&gt;&lt;strong&gt;Venue / Link&lt;/strong&gt;&lt;/td&gt;
+        &lt;td style='padding:8px;border:1px solid #ddd'&gt;" + venueOrLink + "&lt;/td&gt;&lt;/tr&gt;
+  &lt;/table&gt;
+  &lt;p&gt;Please carry a printed copy of your resume and your college ID card.&lt;/p&gt;
+  &lt;p style='color:#666;font-size:13px'&gt;This message was sent by PlacementOS. Drive ID: " + in_DriveId + "&lt;/p&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"
+            </ui:InvokeCode.Code>
+          </ui:InvokeCode>
+
+          <!-- Send Email -->
+          <TryCatch DisplayName="Send Confirmation Email">
+            <TryCatch.Try>
+              <mail:SendMail DisplayName="Send HTML Email"
+                             To="[studentEmail]"
+                             Subject="['Interview Confirmation — ' + in_CompanyName + ' | PlacementOS']"
+                             Body="[emailBody]"
+                             IsBodyHtml="True"
+                             SmtpServer="[in_SmtpHost]"
+                             Port="[in_SmtpPort]"
+                             UserName="[in_SmtpUser]"
+                             Password="[in_SmtpPassword]"
+                             EnableSsl="True"/>
+              <Assign>
+                <Assign.To><OutArgument x:TypeArguments="x:Int32">[emailsSent]</OutArgument></Assign.To>
+                <Assign.Value><InArgument x:TypeArguments="x:Int32">[emailsSent + 1]</InArgument></Assign.Value>
+              </Assign>
+              <ui:LogMessage Level="Info" Message="{'[CalendarEmailBot] Email sent to: ' + studentEmail}"/>
+            </TryCatch.Try>
+            <TryCatch.Catches>
+              <Catch x:TypeArguments="x:Exception">
+                <ActivityAction x:TypeArguments="x:Exception">
+                  <ActivityAction.Argument><DelegateInArgument Name="mailEx"/></ActivityAction.Argument>
+                  <ui:LogMessage Level="Error" Message="{'[CalendarEmailBot] Email failed for ' + studentEmail + ': ' + mailEx.Message}"/>
+                </ActivityAction>
+              </Catch>
+            </TryCatch.Catches>
+          </TryCatch>
+
+        </Sequence>
+      </ActivityAction>
+    </ForEach>
+
+    <!-- Write outputs -->
+    <Assign>
+      <Assign.To><OutArgument x:TypeArguments="x:Int32">[out_EmailsSent]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:Int32">[emailsSent]</InArgument></Assign.Value>
+    </Assign>
+    <Assign>
+      <Assign.To><OutArgument x:TypeArguments="x:Int32">[out_CalendarEventsCreated]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:Int32">[calendarCreated]</InArgument></Assign.Value>
+    </Assign>
+
+    <ui:LogMessage Level="Info" Message="{'[CalendarEmailBot] Done. Emails sent: ' + emailsSent.ToString() + ', Calendar events: ' + calendarCreated.ToString()}"/>
+  </Sequence>
+</Activity>

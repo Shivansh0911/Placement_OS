@@ -1,0 +1,99 @@
+{
+  "formName": "HR Interview Slots Confirmation",
+  "formVersion": "1.0.0",
+  "description": "Displayed to Company HR in UiPath Action Center. HR confirms the interview date, time, mode, and panel details.",
+  "assigneeRole": "company_hr_role",
+  "sla": "PT48H",
+  "fields": [
+    {
+      "name": "company_name",
+      "label": "Company",
+      "type": "text",
+      "readOnly": true
+    },
+    {
+      "name": "drive_id",
+      "label": "Drive ID",
+      "type": "text",
+      "readOnly": true
+    },
+    {
+      "name": "shortlisted_count",
+      "label": "Shortlisted Candidates",
+      "type": "number",
+      "readOnly": true
+    },
+    {
+      "name": "shortlisted_candidates_table",
+      "label": "Shortlisted Candidate List",
+      "type": "datagrid",
+      "readOnly": true,
+      "columns": [
+        { "key": "name", "header": "Name", "type": "text" },
+        { "key": "branch", "header": "Branch", "type": "text" },
+        { "key": "cgpa", "header": "CGPA", "type": "number" },
+        { "key": "ai_score", "header": "AI Score", "type": "number" }
+      ]
+    },
+    {
+      "name": "interview_date",
+      "label": "Interview Date",
+      "type": "date",
+      "required": true,
+      "description": "Date on which interviews will be conducted"
+    },
+    {
+      "name": "interview_time",
+      "label": "Interview Start Time (IST)",
+      "type": "time",
+      "required": true
+    },
+    {
+      "name": "interview_mode",
+      "label": "Interview Mode",
+      "type": "dropdown",
+      "required": true,
+      "options": [
+        { "value": "Online", "label": "Online (video call)" },
+        { "value": "Offline", "label": "Offline (in-person at campus)" },
+        { "value": "Hybrid", "label": "Hybrid (some online, some offline)" }
+      ]
+    },
+    {
+      "name": "venue_or_link",
+      "label": "Venue / Meeting Link",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g. https://meet.google.com/abc-def-ghi  or  Room 201, Academic Block, BITS Hyderabad"
+    },
+    {
+      "name": "interview_duration_minutes",
+      "label": "Duration per Candidate (minutes)",
+      "type": "number",
+      "required": true,
+      "default": 45
+    },
+    {
+      "name": "panel_members",
+      "label": "Interview Panel Members",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "e.g. Rajesh Kumar (Senior SDE), Priya Sharma (Engineering Manager)"
+    },
+    {
+      "name": "special_instructions",
+      "label": "Special Instructions for Candidates (optional)",
+      "type": "textarea",
+      "placeholder": "e.g. Please bring printed resume and college ID. Technical round will test DSA and system design."
+    }
+  ],
+  "outputVariables": {
+    "interview_date": "maps to process variable: interview_schedule.date",
+    "interview_time": "maps to process variable: interview_schedule.time",
+    "interview_mode": "maps to process variable: interview_schedule.mode",
+    "venue_or_link": "maps to process variable: interview_schedule.link",
+    "interview_duration_minutes": "maps to process variable: interview_schedule.duration_minutes",
+    "panel_members": "maps to process variable: interview_schedule.panel",
+    "special_instructions": "maps to process variable: interview_schedule.instructions"
+  }
+}

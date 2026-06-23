@@ -1,0 +1,81 @@
+{
+  "formName": "TPO Shortlist Review",
+  "formVersion": "1.0.0",
+  "description": "Displayed to the TPO in UiPath Action Center. Shows AI-ranked candidates for review and shortlist approval.",
+  "assigneeRole": "tpo_role",
+  "sla": "PT24H",
+  "fields": [
+    {
+      "name": "drive_id",
+      "label": "Drive ID",
+      "type": "text",
+      "readOnly": true,
+      "required": false,
+      "description": "Unique identifier for this placement drive instance"
+    },
+    {
+      "name": "company_name",
+      "label": "Company",
+      "type": "text",
+      "readOnly": true,
+      "required": false
+    },
+    {
+      "name": "job_description_preview",
+      "label": "Job Description (Preview)",
+      "type": "textarea",
+      "readOnly": true,
+      "required": false
+    },
+    {
+      "name": "candidates_table",
+      "label": "AI-Ranked Candidates",
+      "type": "datagrid",
+      "readOnly": true,
+      "required": false,
+      "description": "Candidates ranked by AI score. Review scores and reasoning before making your decision.",
+      "columns": [
+        { "key": "rank", "header": "#", "type": "number", "width": 50 },
+        { "key": "name", "header": "Name", "type": "text", "width": 160 },
+        { "key": "branch", "header": "Branch", "type": "text", "width": 80 },
+        { "key": "cgpa", "header": "CGPA", "type": "number", "width": 70 },
+        { "key": "ai_score", "header": "AI Score", "type": "number", "width": 90 },
+        { "key": "recommendation", "header": "AI Verdict", "type": "text", "width": 110 },
+        { "key": "reasoning", "header": "AI Reasoning", "type": "text", "width": 300 },
+        { "key": "strengths", "header": "Strengths", "type": "text", "width": 200 },
+        { "key": "gaps", "header": "Gaps", "type": "text", "width": 180 }
+      ]
+    },
+    {
+      "name": "tpo_decision",
+      "label": "Your Decision",
+      "type": "radio",
+      "required": true,
+      "options": [
+        { "value": "APPROVE_ALL", "label": "Approve All (shortlist everyone the AI recommended)" },
+        { "value": "APPROVE_SELECTED", "label": "Approve Selected (I'll pick from the list below)" },
+        { "value": "REJECT_ALL", "label": "Reject All (cancel drive — no suitable candidates)" }
+      ]
+    },
+    {
+      "name": "selected_student_ids",
+      "label": "Select Candidates to Shortlist",
+      "type": "multicheckbox",
+      "required": false,
+      "visibilityCondition": "tpo_decision == 'APPROVE_SELECTED'",
+      "description": "Check the candidates you want to shortlist for interview. Only enabled when 'Approve Selected' is chosen."
+    },
+    {
+      "name": "tpo_notes",
+      "label": "Notes for Company HR (optional)",
+      "type": "textarea",
+      "required": false,
+      "placeholder": "e.g. Please be flexible with timing for candidates 3 and 5 — they have exams that week."
+    }
+  ],
+  "outputVariables": {
+    "tpo_decision": "maps to process variable: tpo_decision",
+    "selected_student_ids": "maps to process variable: shortlisted_ids (JSON array of student_id strings)",
+    "tpo_notes": "maps to process variable: tpo_notes"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "name": "OfferLetterGenerator",
+  "description": "UiPath API Workflow that generates a PDF offer letter from candidate and offer details. Called by the BPMN process after HR submits interview results.",
+  "version": "1.0.0",
+  "type": "APIWorkflow",
+  "inputSchema": {
+    "type": "object",
+    "required": ["candidate_name", "company_name", "role", "package_lpa", "joining_date", "drive_id"],
+    "properties": {
+      "candidate_name": { "type": "string", "description": "Full name of the selected candidate" },
+      "company_name": { "type": "string", "description": "Hiring company name" },
+      "role": { "type": "string", "description": "Job role/designation offered" },
+      "package_lpa": { "type": "number", "description": "Annual package in LPA (Lakhs Per Annum)" },
+      "joining_date": { "type": "string", "format": "date", "description": "Expected joining date YYYY-MM-DD" },
+      "drive_id": { "type": "string", "description": "PlacementOS drive identifier for reference" }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "pdf_base64": { "type": "string", "description": "Base64-encoded offer letter PDF" },
+      "pdf_filename": { "type": "string", "description": "Suggested filename for the attachment" },
+      "generation_status": { "type": "string", "enum": ["SUCCESS", "FALLBACK_TEXT_ONLY"] }
+    }
+  },
+  "steps": [
+    {
+      "id": "step1_build_html",
+      "type": "CodeActivity",
+      "name": "Build Offer Letter HTML",
+      "description": "Constructs HTML offer letter from input parameters using a professional template.",
+      "pseudocode": "htmlContent = BuildOfferLetterHtml(candidate_name, company_name, role, package_lpa, joining_date, drive_id)"
+    },
+    {
+      "id": "step2_generate_pdf",
+      "type": "HTTPRequest",
+      "name": "Generate PDF via html2pdf.app",
+      "description": "Calls the html2pdf.app free API to convert HTML to PDF bytes.",
+      "endpoint": "https://api.html2pdf.app/v1/generate",
+      "method": "POST",
+      "headers": { "Content-Type": "application/json" },
+      "bodyTemplate": {
+        "html": "{htmlContent}",
+        "apiKey": "demo"
+      },
+      "onError": {
+        "action": "SetFallback",
+        "fallbackVariable": "generation_status = 'FALLBACK_TEXT_ONLY'"
+      }
+    },
+    {
+      "id": "step3_encode_output",
+      "type": "CodeActivity",
+      "name": "Base64 Encode PDF Response",
+      "description": "Encodes the PDF bytes as base64 string for passing through the process.",
+      "pseudocode": "pdf_base64 = Convert.ToBase64String(pdfResponseBytes); pdf_filename = candidate_name.Replace(' ', '_') + '_OfferLetter_' + company_name.Replace(' ', '_') + '.pdf'"
+    }
+  ],
+  "offerLetterHtmlTemplate": "<!DOCTYPE html><html><head><meta charset='UTF-8'/><style>body{font-family:Georgia,serif;color:#1a1a1a;margin:0;padding:40px} .header{background:#1a3c5e;color:#fff;padding:30px 40px;margin:-40px -40px 40px} h1{margin:0;font-size:24px} .subtitle{opacity:.8;margin-top:4px} .ref{font-size:12px;color:#666;margin-bottom:30px} table{width:100%;border-collapse:collapse;margin:20px 0} td{padding:12px 16px;border-bottom:1px solid #eee} td:first-child{color:#555;width:200px} .highlight{background:#f0f7ff;font-size:22px;text-align:center;padding:20px;border-radius:6px;margin:30px 0} .footer{margin-top:50px;font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:20px}</style></head><body><div class='header'><h1>Offer of Employment</h1><p class='subtitle'>{{company_name}}</p></div><p>Date: {{date}}</p><p class='ref'>Ref: {{drive_id}}/OFFER/{{candidate_name_upper}}</p><p>Dear <strong>{{candidate_name}}</strong>,</p><p>We are pleased to offer you the position of <strong>{{role}}</strong> at <strong>{{company_name}}</strong>. This offer is extended following your successful completion of the campus placement process conducted at BITS Pilani Hyderabad Campus.</p><table><tr><td>Position</td><td><strong>{{role}}</strong></td></tr><tr><td>Company</td><td>{{company_name}}</td></tr><tr><td>Annual CTC</td><td><strong>₹{{package_lpa}} Lakhs Per Annum</strong></td></tr><tr><td>Expected Joining Date</td><td>{{joining_date}}</td></tr><tr><td>Employment Type</td><td>Full-Time, Permanent</td></tr></table><div class='highlight'>₹{{package_lpa}} LPA</div><p>Please confirm your acceptance of this offer by replying to this email within 7 days. This offer is conditional upon satisfactory completion of your degree and background verification.</p><p>We look forward to welcoming you to the team.</p><p style='margin-top:40px'>Warm regards,<br/><strong>Talent Acquisition Team</strong><br/>{{company_name}}</p><p class='footer'>This offer was generated via PlacementOS (Drive ID: {{drive_id}}). Questions? Contact your TPO.</p></body></html>"
+}

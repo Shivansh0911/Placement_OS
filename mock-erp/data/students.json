@@ -1,0 +1,202 @@
+[
+  {
+    "student_id": "2021A7PS0001H",
+    "name": "Rahul Sharma",
+    "branch": "CSE",
+    "cgpa": 8.4,
+    "backlogs": 0,
+    "email": "rahul.sharma@bits.ac.in",
+    "phone": "+91-9876543201",
+    "resume_text": "B.Tech Computer Science, BITS Pilani Hyderabad Campus. CGPA: 8.4/10. Internship at Infosys (May–July 2023): Developed 4 REST APIs in Spring Boot for an internal leave management system; reduced API response time by 30% through query optimization. Projects: (1) CampusLink – campus social network (React, Node.js, MongoDB, 200+ active users). (2) StockSight – LSTM-based stock trend predictor (Python, TensorFlow, 78% directional accuracy on NSE data). Skills: Java, Python, JavaScript, Spring Boot, React, SQL, Git. Achievements: Smart India Hackathon 2023 Finalist (top 6 nationally), BITS Pilani Merit Scholarship 2021-22."
+  },
+  {
+    "student_id": "2021A7PS0002H",
+    "name": "Priya Nair",
+    "branch": "CSE",
+    "cgpa": 9.1,
+    "backlogs": 0,
+    "email": "priya.nair@bits.ac.in",
+    "phone": "+91-9876543202",
+    "resume_text": "B.Tech Computer Science, BITS Pilani Hyderabad Campus. CGPA: 9.1/10. Internship at Microsoft IDC Hyderabad (May–July 2023): Contributed to Azure DevOps pipeline reliability tooling; shipped a feature that reduced false-positive CI failures by 18%. Research: Co-authored paper on transformer pruning techniques at BITS Pilani (submitted to AAAI 2024). Projects: (1) AutoGrade – NLP-based code assignment grader (Python, HuggingFace Transformers). (2) SecureVault – AES-256 encrypted personal notes app (Flutter, Firebase). Skills: Python, C++, TypeScript, PyTorch, Azure, REST APIs, System Design. Achievements: BITS Academic Excellence Award 2022, 2023. Competitive Programming: Codeforces Specialist (1450 rating)."
+  },
+  {
+    "student_id": "2021A7PS0003H",
+    "name": "Arjun Mehta",
+    "branch": "CSE",
+    "cgpa": 7.6,
+    "backlogs": 0,
+    "email": "arjun.mehta@bits.ac.in",
+    "phone": "+91-9876543203",
+    "resume_text": "B.Tech Computer Science, BITS Pilani Hyderabad Campus. CGPA: 7.6/10. Internship at Wipro Technologies (June–August 2023): Automated regression test suite for a banking application using Selenium and TestNG; reduced manual QA effort by 40%. Projects: (1) LibraryOS – library management system (Django, PostgreSQL). (2) WeatherBot – Telegram bot for hyperlocal weather alerts (Python, OpenWeatherMap API, 500+ subscribers). Skills: Python, Java, Django, SQL, Selenium, Linux, Docker basics. Achievements: Participated in ACM ICPC 2022 regional round."
+  },
+  {
+    "student_id": "2021A7PS0004H",
+    "name": "Sneha Iyer",
+    "branch": "CSE",
+    "cgpa": 8.9,
+    "backlogs": 0,
+    "email": "sneha.iyer@bits.ac.in",
+    "phone": "+91-9876543204",
+    "resume_text": "B.Tech Computer Science, BITS Pilani Hyderabad Campus. CGPA: 8.9/10. Internship at Goldman Sachs Bengaluru (May–July 2023): Built a data pipeline in Python + Airflow to aggregate trade settlement data across 3 internal systems; pipeline now runs daily in production handling ~500K records. Projects: (1) FinViz – interactive portfolio analytics dashboard (React, FastAPI, PostgreSQL). (2) ChainVote – blockchain-based student council voting system (Solidity, Web3.js). Skills: Python, Java, React, SQL, Apache Airflow, Docker, Git. Achievements: Winner – BITS Pilani Finance Hackathon 2023. CFA Level 1 scheduled Dec 2024."
+  },
+  {
+    "student_id": "2021A7PS0005H",
+    "name": "Karan Verma",
+    "branch": "CSE",
+    "cgpa": 6.8,
+    "backlogs": 1,
+    "email": "karan.verma@bits.ac.in",
+    "phone": "+91-9876543205",
+    "resume_text": "B.Tech Computer Science, BITS Pilani Hyderabad Campus. CGPA: 6.8/10 (1 backlog cleared). Internship at local startup Nimble Apps (May–July 2023): Built Android app UI screens in Flutter for a food delivery MVP. Projects: (1) TaskFlow – kanban board web app (React, Node.js). (2) QuizApp – Android quiz application (Java, SQLite). Skills: Flutter, Dart, React, Node.js, Java, Firebase. Interests: Mobile app development, UI/UX design."
+  },
+  {
+    "student_id": "2021A7PS0006H",
+    "name": "Divya Reddy",
+    "branch": "IT",
+    "cgpa": 8.2,
+    "backlogs": 0,
+    "email": "divya.reddy@bits.ac.in",
+    "phone": "+91-9876543206",
+    "resume_text": "B.Tech Information Technology, BITS Pilani Hyderabad Campus. CGPA: 8.2/10. Internship at Accenture (May–August 2023): Developed microservices for a retail inventory system using Spring Boot and Kafka; deployed to AWS ECS with CI/CD via GitHub Actions. Projects: (1) AgroSense – IoT soil moisture monitoring for farmers (Raspberry Pi, MQTT, InfluxDB, Grafana). (2) PlagCheck – document similarity detection tool (Python, TF-IDF cosine similarity, Flask). Skills: Java, Python, Spring Boot, Kafka, AWS, Docker, Kubernetes basics, REST APIs. Certifications: AWS Solutions Architect Associate."
+  },
+  {
+    "student_id": "2021A7PS0007H",
+    "name": "Rohan Gupta",
+    "branch": "IT",
+    "cgpa": 7.4,
+    "backlogs": 0,
+    "email": "rohan.gupta@bits.ac.in",
+    "phone": "+91-9876543207",
+    "resume_text": "B.Tech Information Technology, BITS Pilani Hyderabad Campus. CGPA: 7.4/10. Internship at HCL Technologies (June–August 2023): Migrated a legacy VB6 application's data layer to SQL Server 2019; wrote ETL scripts in Python that processed 2M+ rows. Projects: (1) EventHub – college event management portal (PHP, MySQL). (2) NetScan – network port scanner with GUI (Python, Tkinter, nmap). Skills: Python, PHP, SQL, JavaScript, Linux, Bash scripting. Certifications: CompTIA Network+ (in progress)."
+  },
+  {
+    "student_id": "2021A7PS0008H",
+    "name": "Tanvi Joshi",
+    "branch": "IT",
+    "cgpa": 8.7,
+    "backlogs": 0,
+    "email": "tanvi.joshi@bits.ac.in",
+    "phone": "+91-9876543208",
+    "resume_text": "B.Tech Information Technology, BITS Pilani Hyderabad Campus. CGPA: 8.7/10. Internship at Flipkart Bengaluru (May–July 2023): Worked on the catalog enrichment team; built a Python script using spaCy NER to auto-tag 40K product listings, reducing manual tagging cost by estimated 60%. Projects: (1) MedBridge – telemedicine appointment platform (React, Django, PostgreSQL, Docker). (2) SentimentLens – Twitter sentiment analysis dashboard (Python, VADER, Chart.js). Skills: Python, JavaScript, React, Django, NLP, SQL, Docker, REST APIs. Achievements: BITS Pilani Best Project Award – Information Systems 2023."
+  },
+  {
+    "student_id": "2021A7PS0009H",
+    "name": "Aditya Kumar",
+    "branch": "ECE",
+    "cgpa": 7.9,
+    "backlogs": 0,
+    "email": "aditya.kumar@bits.ac.in",
+    "phone": "+91-9876543209",
+    "resume_text": "B.Tech Electronics and Communication, BITS Pilani Hyderabad Campus. CGPA: 7.9/10. Internship at Texas Instruments India (May–July 2023): Characterized ADC performance under thermal variation for automotive-grade chips; documented findings in MATLAB and contributed to a test automation script that cut characterization time by 25%. Projects: (1) SmartPark – IoT parking occupancy system (ESP32, ultrasonic sensors, MQTT, React dashboard). (2) DigitalFilter – FPGA-based FIR filter design and simulation (VHDL, ModelSim). Skills: Embedded C, Python, MATLAB, VHDL, Arduino, ESP32, Signal Processing. Certifications: NPTEL Digital Circuits (Elite)."
+  },
+  {
+    "student_id": "2021A7PS0010H",
+    "name": "Meera Pillai",
+    "branch": "ECE",
+    "cgpa": 8.0,
+    "backlogs": 0,
+    "email": "meera.pillai@bits.ac.in",
+    "phone": "+91-9876543210",
+    "resume_text": "B.Tech Electronics and Communication, BITS Pilani Hyderabad Campus. CGPA: 8.0/10. Internship at Qualcomm India (May–July 2023): Assisted in verification of a 5G modem baseband block; wrote SystemVerilog assertions for a handoff protocol and found 2 RTL bugs during simulation. Projects: (1) HomeSec – home security system with face recognition (Raspberry Pi, OpenCV, Telegram alerts). (2) AudioClassifier – environmental sound classification CNN (Python, Librosa, TensorFlow, 89% accuracy on ESC-50 dataset). Skills: SystemVerilog, Python, C, MATLAB, OpenCV, TensorFlow. Achievements: Semiconductor India Scholar 2022."
+  },
+  {
+    "student_id": "2021A7PS0011H",
+    "name": "Vishal Singh",
+    "branch": "ECE",
+    "cgpa": 6.5,
+    "backlogs": 0,
+    "email": "vishal.singh@bits.ac.in",
+    "phone": "+91-9876543211",
+    "resume_text": "B.Tech Electronics and Communication, BITS Pilani Hyderabad Campus. CGPA: 6.5/10. Internship at BSNL (June–July 2023): Assisted in maintenance and documentation of optical fiber network topology for Hyderabad district. Projects: (1) VoIP Walkie-Talkie – half-duplex voice communication over UDP (C, sockets). (2) PCB Design – 555 timer-based LED flasher (KiCad). Skills: C, Python basics, PCB design, Analog circuits, Telecommunications fundamentals. Interests: RF systems, wireless communication."
+  },
+  {
+    "student_id": "2021A7PS0012H",
+    "name": "Ananya Das",
+    "branch": "ECE",
+    "cgpa": 9.0,
+    "backlogs": 0,
+    "email": "ananya.das@bits.ac.in",
+    "phone": "+91-9876543212",
+    "resume_text": "B.Tech Electronics and Communication, BITS Pilani Hyderabad Campus. CGPA: 9.0/10. Internship at Samsung R&D Noida (May–July 2023): Developed a Python-based test automation framework for validating camera ISP firmware across 12 device variants; framework now part of the official QA pipeline. Projects: (1) EdgeML Classifier – real-time gesture recognition on Arduino Nano 33 BLE (TensorFlow Lite, 94% accuracy). (2) WirelessMesh – LoRa-based mesh communication for disaster relief scenarios (ESP32, LoRa SX1276). Skills: Python, C, TensorFlow Lite, LoRa, MATLAB, Embedded systems, Test automation. Research: Presented paper on TinyML at BITS Pilani Technical Symposium 2023."
+  },
+  {
+    "student_id": "2021A7PS0013H",
+    "name": "Nikhil Agarwal",
+    "branch": "EEE",
+    "cgpa": 7.2,
+    "backlogs": 0,
+    "email": "nikhil.agarwal@bits.ac.in",
+    "phone": "+91-9876543213",
+    "resume_text": "B.Tech Electrical and Electronics, BITS Pilani Hyderabad Campus. CGPA: 7.2/10. Internship at Siemens India (June–August 2023): Modeled a PID controller for a conveyor belt speed control system in MATLAB Simulink; reduced steady-state error by 12% versus the existing tuning. Projects: (1) SolarTracker – dual-axis solar panel tracker using LDR sensors and servo motors (Arduino). (2) EV Charging Scheduler – optimization algorithm for EV fleet charging at a depot (Python, PuLP). Skills: MATLAB, Python, C, Power Electronics, Control Systems, PLC basics (Siemens S7-300). Certifications: NPTEL Power Electronics (Elite+Gold)."
+  },
+  {
+    "student_id": "2021A7PS0014H",
+    "name": "Pooja Trivedi",
+    "branch": "EEE",
+    "cgpa": 7.8,
+    "backlogs": 0,
+    "email": "pooja.trivedi@bits.ac.in",
+    "phone": "+91-9876543214",
+    "resume_text": "B.Tech Electrical and Electronics, BITS Pilani Hyderabad Campus. CGPA: 7.8/10. Internship at ABB India (May–July 2023): Contributed to testing of a grid-connected inverter control algorithm; scripted automated data logging from oscilloscope using PyVISA, saving 3 hours of manual work per test cycle. Projects: (1) SmartGrid Monitor – real-time power quality monitoring system (Raspberry Pi, Modbus, InfluxDB, Grafana). (2) BatteryBMS – battery management system simulation for Li-ion cells (MATLAB, Simulink). Skills: Python, MATLAB, PyVISA, Power Systems, Embedded C, SCADA basics. Certifications: AWS Cloud Practitioner."
+  },
+  {
+    "student_id": "2021A7PS0015H",
+    "name": "Siddharth Rao",
+    "branch": "CSE",
+    "cgpa": 8.1,
+    "backlogs": 0,
+    "email": "siddharth.rao@bits.ac.in",
+    "phone": "+91-9876543215",
+    "resume_text": "B.Tech Computer Science, BITS Pilani Hyderabad Campus. CGPA: 8.1/10. Internship at Amazon India (May–July 2023): Built an internal tooling feature for the Alexa Skills Kit debugging console using React and AWS Lambda; feature shipped to 500+ internal developers. Projects: (1) CloudArchive – distributed file storage system with deduplication (Go, gRPC, S3-compatible API). (2) RateLimiter – token bucket rate limiter library for Go (open-source, 47 GitHub stars). Skills: Go, Python, JavaScript, React, AWS Lambda, DynamoDB, System Design, gRPC. Achievements: BITS Pilani Coding Club President 2022-23."
+  },
+  {
+    "student_id": "2021A7PS0016H",
+    "name": "Kavya Subramaniam",
+    "branch": "CSE",
+    "cgpa": 9.3,
+    "backlogs": 0,
+    "email": "kavya.subramaniam@bits.ac.in",
+    "phone": "+91-9876543216",
+    "resume_text": "B.Tech Computer Science, BITS Pilani Hyderabad Campus. CGPA: 9.3/10. Internship at Google India (May–July 2023): Contributed to the Google Maps Places API team; wrote a benchmark harness for a new geocoding algorithm and validated a 15% latency improvement. Research: Published at COMAD 2023 — 'Efficient Approximate Nearest Neighbor Search in High-Dimensional Spaces Using Learned Quantization.' Projects: (1) SketchDB – a learned index structure implementation in C++ (outperforms B-tree on uniform distributions). (2) GradSim – distributed gradient simulation for ML training research (Python, Ray). Skills: C++, Python, Go, Distributed Systems, Machine Learning, SQL, System Design. Achievements: Google Women Techmakers Scholar 2023. LeetCode: 450+ problems solved, rating 2100+."
+  },
+  {
+    "student_id": "2021A7PS0017H",
+    "name": "Amit Chauhan",
+    "branch": "Mechanical",
+    "cgpa": 7.0,
+    "backlogs": 0,
+    "email": "amit.chauhan@bits.ac.in",
+    "phone": "+91-9876543217",
+    "resume_text": "B.Tech Mechanical Engineering, BITS Pilani Hyderabad Campus. CGPA: 7.0/10. Internship at Tata Steel (June–August 2023): Conducted FEA analysis of weld joint configurations under tensile load using ANSYS; identified an alternate joint geometry that reduced stress concentration by 18%. Projects: (1) AutoLine – robotic arm simulation for pick-and-place (MATLAB Robotics Toolbox, ROS basics). (2) ThermoCalc – heat exchanger design calculator (Python, NumPy). Skills: ANSYS, SolidWorks, MATLAB, Python basics, AutoCAD, Manufacturing processes, Thermodynamics. Interests: Transitioning to product design and industrial automation."
+  },
+  {
+    "student_id": "2021A7PS0018H",
+    "name": "Riya Saxena",
+    "branch": "CSE",
+    "cgpa": 7.3,
+    "backlogs": 0,
+    "email": "riya.saxena@bits.ac.in",
+    "phone": "+91-9876543218",
+    "resume_text": "B.Tech Computer Science, BITS Pilani Hyderabad Campus. CGPA: 7.3/10. Internship at Zomato (May–July 2023): Worked on the restaurant onboarding team; built an internal dashboard (React + Flask) to track onboarding funnel drop-offs across cities, used by the ops team daily. Projects: (1) FoodBridge – hyperlocal food donation platform connecting restaurants and NGOs (React Native, Node.js, Google Maps API). (2) CodeCollab – real-time collaborative code editor (WebSockets, Monaco Editor, Express). Skills: JavaScript, React, React Native, Node.js, Python, Flask, MongoDB, REST APIs, WebSockets. Achievements: Won BITS Pilani Product Day 2023 (best consumer product pitch)."
+  },
+  {
+    "student_id": "2021A7PS0019H",
+    "name": "Harsh Patel",
+    "branch": "CSE",
+    "cgpa": 6.2,
+    "backlogs": 2,
+    "email": "harsh.patel@bits.ac.in",
+    "phone": "+91-9876543219",
+    "resume_text": "B.Tech Computer Science, BITS Pilani Hyderabad Campus. CGPA: 6.2/10 (2 backlogs cleared). Freelance developer (2022–present): Built 3 WordPress websites for local businesses. Projects: (1) Budget Tracker – personal finance app (React, localStorage). (2) Quiz App – multiple choice quiz with timer (HTML, CSS, JavaScript). Skills: HTML, CSS, JavaScript, React basics, WordPress, Python basics. Note: Actively improving CGPA and seeking opportunities to contribute to real engineering projects."
+  },
+  {
+    "student_id": "2021A7PS0020H",
+    "name": "Shreya Bhatt",
+    "branch": "IT",
+    "cgpa": 8.5,
+    "backlogs": 0,
+    "email": "shreya.bhatt@bits.ac.in",
+    "phone": "+91-9876543220",
+    "resume_text": "B.Tech Information Technology, BITS Pilani Hyderabad Campus. CGPA: 8.5/10. Internship at Razorpay (May–July 2023): Built a reconciliation microservice in Go that matched payment gateway settlement files against internal transaction records; handles 300K transactions/day in staging. Projects: (1) SpendWise – personal finance tracking app with ML spend categorization (Flutter, FastAPI, scikit-learn). (2) APIGuard – rate limiting and authentication middleware for FastAPI (Python, Redis, JWT). Skills: Go, Python, Flutter, FastAPI, PostgreSQL, Redis, Docker, REST APIs, Microservices. Achievements: Razorpay intern return offer extended. BITS Pilani Academic Excellence Award 2022-23."
+  }
+]

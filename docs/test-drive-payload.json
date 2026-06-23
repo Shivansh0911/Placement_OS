@@ -1,0 +1,27 @@
+{
+  "_comment": "Use this payload to trigger a test placement drive in the BPMN process. Pass these as process input variables when starting the instance in Maestro.",
+  "drive_id": "DRIVE-INFOSYS-2024-001",
+  "company_name": "Infosys Technologies",
+  "job_description": "Infosys is recruiting campus talent for the role of Systems Engineer. Responsibilities include software development, testing, and maintenance of enterprise applications. Ideal candidates will demonstrate strong programming fundamentals, problem-solving skills, and a collaborative mindset. Experience with Java, Python, or JavaScript is preferred. Prior internship or project work in backend development, APIs, or data processing is a significant advantage.",
+  "eligibility_criteria": {
+    "min_cgpa": 7.5,
+    "branches": "CSE,IT,ECE",
+    "max_backlogs": 0
+  },
+  "_eligible_students_expected": "With the above criteria, 11 of the 20 students in mock-erp/data/students.json should be eligible.",
+  "_screening_expected": "Kavya (9.3 CGPA, Google intern), Sneha (Goldman Sachs intern), Priya (Microsoft intern) should rank highest. Karan (Flutter only) should rank lowest among eligible candidates.",
+  "_human_tasks": [
+    {
+      "step": "TPO Review (Action Center)",
+      "instructions": "Log into Action Center as TPO. You should see 11 candidates ranked by AI score. Select 'Approve All' or pick 6-8 candidates. Submit."
+    },
+    {
+      "step": "HR Slot Confirmation (Action Center)",
+      "instructions": "Log in as Company HR. Set date=2024-03-15, time=10:00, mode=Online, link=https://meet.google.com/test-link, panel=Rajesh Kumar (Senior SDE)"
+    },
+    {
+      "step": "Interview Results (Action Center)",
+      "instructions": "After 'interviews', log in as HR. Mark 3-4 candidates as Selected with package_lpa=9.5 and role=Systems Engineer. Mark others Not Selected with feedback."
+    }
+  ]
+}

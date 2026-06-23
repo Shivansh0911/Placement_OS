@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://placementos.io/bpmn"
+             id="PlacementOS_Definitions">
+
+  <process id="PlacementDriveProcess" name="Campus Placement Drive" isExecutable="true">
+
+    <!-- ── Process Variables ─────────────────────────────────────────────── -->
+    <!-- drive_id, company_name, job_description, eligibility_criteria,      -->
+    <!-- eligible_students, screened_results, shortlisted_ids,                -->
+    <!-- interview_schedule, interview_results, process_status                -->
+
+    <!-- ── Start Event ──────────────────────────────────────────────────── -->
+    <startEvent id="StartEvent_DriveRegistered" name="Drive Registered">
+      <documentation>
+        Triggered when a company submits a new placement drive request.
+        Expected input variables: drive_id, company_name, job_description,
+        eligibility_criteria (JSON string with min_cgpa, branches, max_backlogs).
+      </documentation>
+      <outgoing>Flow_Start_to_FetchStudents</outgoing>
+    </startEvent>
+
+    <!-- ── Task 1: Fetch Eligible Students (RPA Bot) ───────────────────── -->
+    <serviceTask id="Task_FetchEligibleStudents"
+                 name="Fetch Eligible Students"
+                 activiti:type="external"
+                 activiti:topic="ERPFetchBot">
+      <documentation>
+        UiPath RPA bot queries the college ERP API with eligibility criteria.
+        Input: eligibility_criteria (process variable, JSON string)
+        Output: eligible_students (process variable, JSON array of student objects)
+        Error boundary: sets process_status = ERP_FETCH_FAILED on WebException.
+      </documentation>
+      <incoming>Flow_Start_to_FetchStudents</incoming>
+      <outgoing>Flow_FetchStudents_to_Screening</outgoing>
+    </serviceTask>
+
+    <!-- ── Task 2: AI Resume Screening (External LangChain Agent) ──────── -->
+    <serviceTask id="Task_AIResumeScreening"
+                 name="AI Resume Screening"
+                 activiti:type="external"
+                 activiti:topic="ResumeScreenerAgent">
+      <documentation>
+        Calls the LangChain FastAPI screening endpoint.
+        POST {SCREENER_URL}/screen with job_description and eligible_students resumes.
+        Output: screened_results (process variable, ranked JSON array with scores).
+        On timeout/failure: falls back to using full eligible_students list.
+      </documentation>
+      <incoming>Flow_FetchStudents_to_Screening</incoming>
+      <outgoing>Flow_Screening_to_EmptyCheck</outgoing>
+    </serviceTask>
+
+    <!-- ── Gateway 1: Screened List Empty? ─────────────────────────────── -->
+    <exclusiveGateway id="Gateway_ScreenedListEmpty" name="Screened List Empty?">
+      <incoming>Flow_Screening_to_EmptyCheck</incoming>
+      <outgoing>Flow_Empty_to_NoMatch</outgoing>
+      <outgoing>Flow_Empty_to_TPOReview</outgoing>
+    </exclusiveGateway>
+
+    <!-- ── End Event (No Match) ─────────────────────────────────────────── -->
+    <endEvent id="EndEvent_NoMatch" name="No Candidates — Drive Closed">
+      <documentation>No eligible candidates found. Company HR is notified automatically.</documentation>
+      <incoming>Flow_Empty_to_NoMatch</incoming>
+    </endEvent>
+
+    <!-- ── Task 3: TPO Shortlist Review (Human — Action Center) ────────── -->
+    <userTask id="Task_TPOShortlistReview"
+              name="TPO Shortlist Review"
+              activiti:assignee="tpo_role"
+              activiti:dueDate="${now() + duration('P1D')}">
+      <documentation>
+        TPO reviews AI-ranked candidate list in Action Center.
+        Form fields: drive_id (RO), company_name (RO), candidates_table (RO grid),
+        tpo_decision (Approve All / Approve Selected / Reject All),
+        selected_ids (multi-select, conditional), tpo_notes (textarea).
+        SLA: 24 hours. Timer boundary escalates to admin on expiry.
+        Output: tpo_decision, shortlisted_ids (process variables).
+      </documentation>
+      <incoming>Flow_Empty_to_TPOReview</incoming>
+      <outgoing>Flow_TPOReview_to_ApprovedCheck</outgoing>
+    </userTask>
+
+    <!-- ── Timer Boundary: TPO SLA Escalation ───────────────────────────── -->
+    <boundaryEvent id="Boundary_TPOTimeout"
+                   name="TPO SLA Exceeded"
+                   attachedToRef="Task_TPOShortlistReview"
+                   cancelActivity="false">
+      <timerEventDefinition>
+        <timeDuration>P1D</timeDuration>
+      </timerEventDefinition>
+      <outgoing>Flow_TPOTimeout_to_EscalateAdmin</outgoing>
+    </boundaryEvent>
+
+    <serviceTask id="Task_EscalateToAdmin"
+                 name="Escalate to Admin"
+                 activiti:type="external"
+                 activiti:topic="EmailNotificationBot">
+      <documentation>Sends escalation email to placement admin when TPO SLA exceeds 24h.</documentation>
+      <incoming>Flow_TPOTimeout_to_EscalateAdmin</incoming>
+    </serviceTask>
+
+    <!-- ── Gateway 2: Shortlist Approved? ──────────────────────────────── -->
+    <exclusiveGateway id="Gateway_ShortlistApproved" name="Shortlist Approved?">
+      <incoming>Flow_TPOReview_to_ApprovedCheck</incoming>
+      <outgoing>Flow_Rejected_to_NotifyHR</outgoing>
+      <outgoing>Flow_Approved_to_HRSlots</outgoing>
+    </exclusiveGateway>
+
+    <!-- ── End Event (Drive Cancelled) ─────────────────────────────────── -->
+    <endEvent id="EndEvent_DriveCancelled" name="Drive Cancelled — No Shortlist">
+      <incoming>Flow_Rejected_to_NotifyHR</incoming>
+    </endEvent>
+
+    <!-- ── Task 4: HR Confirms Interview Slots (Human — Action Center) ─── -->
+    <userTask id="Task_HRConfirmsSlots"
+              name="HR Confirms Interview Slots"
+              activiti:assignee="company_hr_role">
+      <documentation>
+        Company HR enters interview scheduling details in Action Center.
+        Form fields: shortlisted_candidates (RO grid), interview_date (date picker),
+        interview_time (time picker), interview_mode (Online/Offline/Hybrid),
+        venue_or_link (conditional), panel_members (textarea).
+        Output: interview_schedule (process variable, JSON object).
+      </documentation>
+      <incoming>Flow_Approved_to_HRSlots</incoming>
+      <outgoing>Flow_HRSlots_to_CalendarPush</outgoing>
+    </userTask>
+
+    <!-- ── Task 5: Push Calendar Invites (RPA Bot) ──────────────────────── -->
+    <serviceTask id="Task_PushCalendarInvites"
+                 name="Push Calendar Invites &#38; Email Confirmation"
+                 activiti:type="external"
+                 activiti:topic="CalendarEmailBot">
+      <documentation>
+        RPA bot creates Google Calendar events and sends confirmation emails to each shortlisted candidate.
+        Input: shortlisted_ids, interview_schedule (process variables).
+        On OAuth failure: sends email only; logs calendar failure.
+      </documentation>
+      <incoming>Flow_HRSlots_to_CalendarPush</incoming>
+      <outgoing>Flow_CalendarPush_to_ConductInterview</outgoing>
+    </serviceTask>
+
+    <!-- ── Task 6: Conduct Interview (Human — Action Center, HR) ────────── -->
+    <userTask id="Task_ConductInterview"
+              name="HR Submits Interview Results"
+              activiti:assignee="company_hr_role">
+      <documentation>
+        Interviews happen offline. HR returns to Action Center to enter per-candidate results.
+        Form fields (per candidate row): candidate_name (RO), result (Selected / Not Selected),
+        feedback (required if Not Selected), offered_package_lpa (if Selected),
+        offered_role (if Selected).
+        Output: interview_results (process variable, JSON object).
+      </documentation>
+      <incoming>Flow_CalendarPush_to_ConductInterview</incoming>
+      <outgoing>Flow_ConductInterview_to_ProcessOffers</outgoing>
+    </userTask>
+
+    <!-- ── Task 7: Process Offer Decisions (API Workflow) ───────────────── -->
+    <serviceTask id="Task_ProcessOfferDecisions"
+                 name="Generate Offer Letters &#38; Rejection Content"
+                 activiti:type="external"
+                 activiti:topic="OfferLetterWorkflow">
+      <documentation>
+        UiPath API Workflow generates PDF offer letters for selected candidates
+        and rejection email content for others.
+        Input: interview_results, company_name, drive_id (process variables).
+        Output: offer_pdfs_base64 (process variable, JSON map of student_id → PDF base64).
+        On PDF generation failure: falls back to text-only email; logs failure.
+      </documentation>
+      <incoming>Flow_ConductInterview_to_ProcessOffers</incoming>
+      <outgoing>Flow_ProcessOffers_to_Dispatch</outgoing>
+    </serviceTask>
+
+    <!-- ── Task 8: Dispatch Communications (RPA Bot) ────────────────────── -->
+    <serviceTask id="Task_DispatchCommunications"
+                 name="Dispatch Offers &#38; Rejections"
+                 activiti:type="external"
+                 activiti:topic="EmailDispatchBot">
+      <documentation>
+        RPA bot sends offer letters (email + PDF attachment) to selected candidates
+        and rejection emails with feedback to others.
+        Input: interview_results, offer_pdfs_base64, company_name (process variables).
+      </documentation>
+      <incoming>Flow_ProcessOffers_to_Dispatch</incoming>
+      <outgoing>Flow_Dispatch_to_UpdateRecord</outgoing>
+    </serviceTask>
+
+    <!-- ── Task 9: Update Placement Record (RPA Bot) ────────────────────── -->
+    <serviceTask id="Task_UpdatePlacementRecord"
+                 name="Update Placement Record in ERP"
+                 activiti:type="external"
+                 activiti:topic="PlacementRecordBot">
+      <documentation>
+        RPA bot POSTs final placement data to mock ERP /placements/record.
+        Updates drive status to COMPLETED.
+        Records: drive_id, company_name, selected candidates, packages, date.
+      </documentation>
+      <incoming>Flow_Dispatch_to_UpdateRecord</incoming>
+      <outgoing>Flow_UpdateRecord_to_End</outgoing>
+    </serviceTask>
+
+    <!-- ── End Event (Completed) ────────────────────────────────────────── -->
+    <endEvent id="EndEvent_DriveCompleted" name="Placement Drive Completed">
+      <documentation>Drive successfully completed. All offers dispatched, records updated.</documentation>
+      <incoming>Flow_UpdateRecord_to_End</incoming>
+    </endEvent>
+
+    <!-- ── Sequence Flows ───────────────────────────────────────────────── -->
+    <sequenceFlow id="Flow_Start_to_FetchStudents"
+                  sourceRef="StartEvent_DriveRegistered"
+                  targetRef="Task_FetchEligibleStudents"/>
+
+    <sequenceFlow id="Flow_FetchStudents_to_Screening"
+                  sourceRef="Task_FetchEligibleStudents"
+                  targetRef="Task_AIResumeScreening"/>
+
+    <sequenceFlow id="Flow_Screening_to_EmptyCheck"
+                  sourceRef="Task_AIResumeScreening"
+                  targetRef="Gateway_ScreenedListEmpty"/>
+
+    <sequenceFlow id="Flow_Empty_to_NoMatch"
+                  name="No candidates"
+                  sourceRef="Gateway_ScreenedListEmpty"
+                  targetRef="EndEvent_NoMatch">
+      <conditionExpression xsi:type="tFormalExpression">
+        ${screened_results_count == 0}
+      </conditionExpression>
+    </sequenceFlow>
+
+    <sequenceFlow id="Flow_Empty_to_TPOReview"
+                  name="Candidates found"
+                  sourceRef="Gateway_ScreenedListEmpty"
+                  targetRef="Task_TPOShortlistReview">
+      <conditionExpression xsi:type="tFormalExpression">
+        ${screened_results_count > 0}
+      </conditionExpression>
+    </sequenceFlow>
+
+    <sequenceFlow id="Flow_TPOTimeout_to_EscalateAdmin"
+                  sourceRef="Boundary_TPOTimeout"
+                  targetRef="Task_EscalateToAdmin"/>
+
+    <sequenceFlow id="Flow_TPOReview_to_ApprovedCheck"
+                  sourceRef="Task_TPOShortlistReview"
+                  targetRef="Gateway_ShortlistApproved"/>
+
+    <sequenceFlow id="Flow_Rejected_to_NotifyHR"
+                  name="Rejected"
+                  sourceRef="Gateway_ShortlistApproved"
+                  targetRef="EndEvent_DriveCancelled">
+      <conditionExpression xsi:type="tFormalExpression">
+        ${tpo_decision == 'REJECT_ALL'}
+      </conditionExpression>
+    </sequenceFlow>
+
+    <sequenceFlow id="Flow_Approved_to_HRSlots"
+                  name="Approved"
+                  sourceRef="Gateway_ShortlistApproved"
+                  targetRef="Task_HRConfirmsSlots">
+      <conditionExpression xsi:type="tFormalExpression">
+        ${tpo_decision == 'APPROVE_ALL' || tpo_decision == 'APPROVE_SELECTED'}
+      </conditionExpression>
+    </sequenceFlow>
+
+    <sequenceFlow id="Flow_HRSlots_to_CalendarPush"
+                  sourceRef="Task_HRConfirmsSlots"
+                  targetRef="Task_PushCalendarInvites"/>
+
+    <sequenceFlow id="Flow_CalendarPush_to_ConductInterview"
+                  sourceRef="Task_PushCalendarInvites"
+                  targetRef="Task_ConductInterview"/>
+
+    <sequenceFlow id="Flow_ConductInterview_to_ProcessOffers"
+                  sourceRef="Task_ConductInterview"
+                  targetRef="Task_ProcessOfferDecisions"/>
+
+    <sequenceFlow id="Flow_ProcessOffers_to_Dispatch"
+                  sourceRef="Task_ProcessOfferDecisions"
+                  targetRef="Task_DispatchCommunications"/>
+
+    <sequenceFlow id="Flow_Dispatch_to_UpdateRecord"
+                  sourceRef="Task_DispatchCommunications"
+                  targetRef="Task_UpdatePlacementRecord"/>
+
+    <sequenceFlow id="Flow_UpdateRecord_to_End"
+                  sourceRef="Task_UpdatePlacementRecord"
+                  targetRef="EndEvent_DriveCompleted"/>
+
+  </process>
+
+  <!-- ── BPMN Diagram Layout ──────────────────────────────────────────── -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_PlacementOS">
+    <bpmndi:BPMNPlane id="BPMNPlane_PlacementOS" bpmnElement="PlacementDriveProcess">
+
+      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="StartEvent_DriveRegistered">
+        <omgdc:Bounds x="152" y="82" width="36" height="36"/>
+        <bpmndi:BPMNLabel><omgdc:Bounds x="125" y="125" width="90" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_FetchStudents" bpmnElement="Task_FetchEligibleStudents">
+        <omgdc:Bounds x="240" y="60" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_AIScreening" bpmnElement="Task_AIResumeScreening">
+        <omgdc:Bounds x="460" y="60" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_GW_Empty" bpmnElement="Gateway_ScreenedListEmpty" isMarkerVisible="true">
+        <omgdc:Bounds x="680" y="75" width="50" height="50"/>
+        <bpmndi:BPMNLabel><omgdc:Bounds x="655" y="132" width="100" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_EndNoMatch" bpmnElement="EndEvent_NoMatch">
+        <omgdc:Bounds x="692" y="200" width="36" height="36"/>
+        <bpmndi:BPMNLabel><omgdc:Bounds x="660" y="243" width="100" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_TPOReview" bpmnElement="Task_TPOShortlistReview">
+        <omgdc:Bounds x="800" y="60" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_BoundaryTPO" bpmnElement="Boundary_TPOTimeout">
+        <omgdc:Bounds x="862" y="122" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_EscalateAdmin" bpmnElement="Task_EscalateToAdmin">
+        <omgdc:Bounds x="844" y="200" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_GW_Approved" bpmnElement="Gateway_ShortlistApproved" isMarkerVisible="true">
+        <omgdc:Bounds x="1020" y="75" width="50" height="50"/>
+        <bpmndi:BPMNLabel><omgdc:Bounds x="995" y="132" width="100" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_EndCancelled" bpmnElement="EndEvent_DriveCancelled">
+        <omgdc:Bounds x="1032" y="200" width="36" height="36"/>
+        <bpmndi:BPMNLabel><omgdc:Bounds x="1000" y="243" width="100" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_HRSlots" bpmnElement="Task_HRConfirmsSlots">
+        <omgdc:Bounds x="1130" y="60" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_CalendarPush" bpmnElement="Task_PushCalendarInvites">
+        <omgdc:Bounds x="1350" y="60" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_ConductInterview" bpmnElement="Task_ConductInterview">
+        <omgdc:Bounds x="1570" y="60" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_ProcessOffers" bpmnElement="Task_ProcessOfferDecisions">
+        <omgdc:Bounds x="1790" y="60" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_Dispatch" bpmnElement="Task_DispatchCommunications">
+        <omgdc:Bounds x="2010" y="60" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_UpdateRecord" bpmnElement="Task_UpdatePlacementRecord">
+        <omgdc:Bounds x="2230" y="60" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_EndCompleted" bpmnElement="EndEvent_DriveCompleted">
+        <omgdc:Bounds x="2450" y="82" width="36" height="36"/>
+        <bpmndi:BPMNLabel><omgdc:Bounds x="2423" y="125" width="90" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Sequence Flow Edges -->
+      <bpmndi:BPMNEdge id="Edge_Start_Fetch" bpmnElement="Flow_Start_to_FetchStudents">
+        <omgdi:waypoint x="188" y="100"/><omgdi:waypoint x="240" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Fetch_Screen" bpmnElement="Flow_FetchStudents_to_Screening">
+        <omgdi:waypoint x="400" y="100"/><omgdi:waypoint x="460" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Screen_GW" bpmnElement="Flow_Screening_to_EmptyCheck">
+        <omgdi:waypoint x="620" y="100"/><omgdi:waypoint x="680" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_GW_NoMatch" bpmnElement="Flow_Empty_to_NoMatch">
+        <omgdi:waypoint x="705" y="125"/><omgdi:waypoint x="705" y="200"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_GW_TPO" bpmnElement="Flow_Empty_to_TPOReview">
+        <omgdi:waypoint x="730" y="100"/><omgdi:waypoint x="800" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_TPOTimeout_Escalate" bpmnElement="Flow_TPOTimeout_to_EscalateAdmin">
+        <omgdi:waypoint x="880" y="158"/><omgdi:waypoint x="880" y="200"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_TPO_GW2" bpmnElement="Flow_TPOReview_to_ApprovedCheck">
+        <omgdi:waypoint x="960" y="100"/><omgdi:waypoint x="1020" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_GW2_Cancelled" bpmnElement="Flow_Rejected_to_NotifyHR">
+        <omgdi:waypoint x="1045" y="125"/><omgdi:waypoint x="1045" y="200"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_GW2_HRSlots" bpmnElement="Flow_Approved_to_HRSlots">
+        <omgdi:waypoint x="1070" y="100"/><omgdi:waypoint x="1130" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_HR_Calendar" bpmnElement="Flow_HRSlots_to_CalendarPush">
+        <omgdi:waypoint x="1290" y="100"/><omgdi:waypoint x="1350" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Calendar_Interview" bpmnElement="Flow_CalendarPush_to_ConductInterview">
+        <omgdi:waypoint x="1510" y="100"/><omgdi:waypoint x="1570" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Interview_Offers" bpmnElement="Flow_ConductInterview_to_ProcessOffers">
+        <omgdi:waypoint x="1730" y="100"/><omgdi:waypoint x="1790" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Offers_Dispatch" bpmnElement="Flow_ProcessOffers_to_Dispatch">
+        <omgdi:waypoint x="1950" y="100"/><omgdi:waypoint x="2010" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Dispatch_Record" bpmnElement="Flow_Dispatch_to_UpdateRecord">
+        <omgdi:waypoint x="2170" y="100"/><omgdi:waypoint x="2230" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Record_End" bpmnElement="Flow_UpdateRecord_to_End">
+        <omgdi:waypoint x="2390" y="100"/><omgdi:waypoint x="2450" y="100"/>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</definitions>

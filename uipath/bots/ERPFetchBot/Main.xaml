@@ -1,0 +1,152 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="UiPath.Process" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities">
+  <!--
+    ERPFetchBot — Main.xaml
+    Fetches eligible students from the college ERP REST API.
+
+    INPUT  (Process Arguments — In):
+      in_ERPBaseUrl           : String  — base URL of the mock ERP, e.g. https://erp.render.app
+      in_EligibilityCriteria  : String  — JSON string: {"min_cgpa":7.5,"branches":"CSE,IT","max_backlogs":0}
+
+    OUTPUT (Process Arguments — Out):
+      out_EligibleStudents    : String  — JSON array of eligible student objects
+      out_EligibleCount       : Int32   — number of eligible students
+
+    On failure: throws ApplicationException with error_code = "ERP_FETCH_FAILED"
+    BPMN error boundary catches this and sets process_status accordingly.
+  -->
+  <x:Members>
+    <x:Property Name="in_ERPBaseUrl" Type="InArgument(x:String)"/>
+    <x:Property Name="in_EligibilityCriteria" Type="InArgument(x:String)"/>
+    <x:Property Name="out_EligibleStudents" Type="OutArgument(x:String)"/>
+    <x:Property Name="out_EligibleCount" Type="OutArgument(x:Int32)"/>
+  </x:Members>
+
+  <Sequence DisplayName="ERPFetchBot — Fetch Eligible Students" sap2010:WorkflowViewState.IdRef="Sequence1">
+    <Sequence.Variables>
+      <Variable Name="criteria" Type="x:Object"/>
+      <Variable Name="minCgpa" Type="x:String" Default="6.0"/>
+      <Variable Name="branches" Type="x:String" Default=""/>
+      <Variable Name="maxBacklogs" Type="x:String" Default="0"/>
+      <Variable Name="requestUrl" Type="x:String"/>
+      <Variable Name="responseBody" Type="x:String"/>
+      <Variable Name="statusCode" Type="x:Int32"/>
+    </Sequence.Variables>
+
+    <!-- Log Start -->
+    <ui:LogMessage Level="Info" Message="[ERPFetchBot] Starting ERP fetch. Base URL: {in_ERPBaseUrl}"/>
+
+    <!-- Parse eligibility criteria JSON -->
+    <TryCatch DisplayName="Parse Eligibility Criteria">
+      <TryCatch.Try>
+        <Sequence>
+          <ui:InvokeCode DisplayName="Deserialize Criteria JSON">
+            <ui:InvokeCode.Code>
+              ' Parse min_cgpa, branches, max_backlogs from JSON string
+              Dim jObj = Newtonsoft.Json.Linq.JObject.Parse(in_EligibilityCriteria)
+              minCgpa = If(jObj("min_cgpa") IsNot Nothing, jObj("min_cgpa").ToString(), "6.0")
+              branches = If(jObj("branches") IsNot Nothing, jObj("branches").ToString(), "")
+              maxBacklogs = If(jObj("max_backlogs") IsNot Nothing, jObj("max_backlogs").ToString(), "0")
+            </ui:InvokeCode.Code>
+          </ui:InvokeCode>
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="x:Exception">
+          <ActivityAction x:TypeArguments="x:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument Name="ex"/>
+            </ActivityAction.Argument>
+            <ui:LogMessage Level="Warn" Message="{'[ERPFetchBot] Could not parse eligibility criteria, using defaults. Error: ' + ex.Message}"/>
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+    <!-- Build query URL -->
+    <Assign DisplayName="Build ERP Request URL">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[requestUrl]</OutArgument></Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[in_ERPBaseUrl.TrimEnd("/") + "/students/eligible?min_cgpa=" + minCgpa + "&amp;max_backlogs=" + maxBacklogs + If(String.IsNullOrEmpty(branches), "", "&amp;branches=" + branches)]</InArgument>
+      </Assign.Value>
+    </Assign>
+
+    <ui:LogMessage Level="Info" Message="{'[ERPFetchBot] Calling ERP: ' + requestUrl}"/>
+
+    <!-- HTTP Request to ERP -->
+    <TryCatch DisplayName="HTTP Request — ERP Students Eligible">
+      <TryCatch.Try>
+        <Sequence>
+          <ui:HTTPRequest DisplayName="GET /students/eligible"
+                          Endpoint="[requestUrl]"
+                          Method="GET"
+                          Response="[responseBody]"
+                          StatusCode="[statusCode]"
+                          TimeoutMS="30000"
+                          AcceptFormat="JSON"/>
+
+          <If DisplayName="Check HTTP Status" Condition="[statusCode &lt;&gt; 200]">
+            <If.Then>
+              <Throw DisplayName="Throw on non-200">
+                <Throw.Exception>
+                  <InArgument x:TypeArguments="x:Exception">
+                    [New ApplicationException("ERP_FETCH_FAILED: HTTP " + statusCode.ToString() + " from " + requestUrl)]
+                  </InArgument>
+                </Throw.Exception>
+              </Throw>
+            </If.Then>
+          </If>
+
+          <!-- Parse response -->
+          <ui:InvokeCode DisplayName="Extract eligible_students array">
+            <ui:InvokeCode.Code>
+              Dim jObj = Newtonsoft.Json.Linq.JObject.Parse(responseBody)
+              Dim studentsArray = jObj("eligible_students")
+              out_EligibleStudents = studentsArray.ToString(Newtonsoft.Json.Formatting.None)
+              out_EligibleCount = CInt(jObj("count").ToString())
+            </ui:InvokeCode.Code>
+          </ui:InvokeCode>
+
+          <ui:LogMessage Level="Info" Message="{'[ERPFetchBot] Fetched ' + out_EligibleCount.ToString() + ' eligible students.'}"/>
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="System.Net.WebException">
+          <ActivityAction x:TypeArguments="System.Net.WebException">
+            <ActivityAction.Argument>
+              <DelegateInArgument Name="webEx"/>
+            </ActivityAction.Argument>
+            <Sequence>
+              <ui:LogMessage Level="Error" Message="{'[ERPFetchBot] Network error: ' + webEx.Message}"/>
+              <Throw>
+                <Throw.Exception>
+                  <InArgument x:TypeArguments="x:Exception">
+                    [New ApplicationException("ERP_FETCH_FAILED: " + webEx.Message)]
+                  </InArgument>
+                </Throw.Exception>
+              </Throw>
+            </Sequence>
+          </ActivityAction>
+        </Catch>
+        <Catch x:TypeArguments="x:Exception">
+          <ActivityAction x:TypeArguments="x:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument Name="ex"/>
+            </ActivityAction.Argument>
+            <Sequence>
+              <ui:LogMessage Level="Error" Message="{'[ERPFetchBot] Unexpected error: ' + ex.Message}"/>
+              <Throw>
+                <Throw.Exception>
+                  <InArgument x:TypeArguments="x:Exception">
+                    [New ApplicationException("ERP_FETCH_FAILED: " + ex.Message)]
+                  </InArgument>
+                </Throw.Exception>
+              </Throw>
+            </Sequence>
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+    <ui:LogMessage Level="Info" Message="[ERPFetchBot] Completed successfully."/>
+  </Sequence>
+</Activity>

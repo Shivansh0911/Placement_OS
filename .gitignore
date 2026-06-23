@@ -1,0 +1,43 @@
+# Secrets
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# UiPath Studio
+*.nupkg
+.entities/
+.objects/
+.screenshots/
+*.bak
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.cursor/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data — keep students.json, don't commit real placement data
+mock-erp/data/placements.json
+
+# Logs
+*.log
+logs/

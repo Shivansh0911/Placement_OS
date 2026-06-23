@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/uipath-orchestrator-project-settings",
+  "name": "CalendarEmailBot",
+  "description": "Sends interview confirmation emails and creates Google Calendar events for shortlisted placement candidates.",
+  "main": "Main.xaml",
+  "outputType": "Process",
+  "expressionLanguage": "VisualBasic",
+  "targetFramework": "Portable",
+  "runtimeOptions": {
+    "requiresUserInteraction": false,
+    "supportsPersistence": false,
+    "excludedLoggedData": ["in_SmtpPassword"],
+    "executionType": "Workflow",
+    "readyForPiP": false,
+    "mustRestoreAllDependencies": true
+  },
+  "dependencies": {
+    "UiPath.System.Activities": "[23.10.3, )",
+    "UiPath.Mail.Activities": "[1.22.1, )",
+    "UiPath.WebAPI.Activities": "[1.16.1, )"
+  },
+  "libraryOptions": {
+    "includeOriginalXaml": false,
+    "privateWorkflows": []
+  },
+  "publishData": {},
+  "templateProjectData": {}
+}
