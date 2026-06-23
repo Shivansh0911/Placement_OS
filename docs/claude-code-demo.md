@@ -22,7 +22,7 @@ Build a production-quality FastAPI + LangChain resume screening agent for campus
 
 Requirements:
 - POST /screen accepts job_description, eligibility_criteria (dict), and a list of resumes (student_id, name, resume_text)
-- Each resume is scored 0-100 against the JD using GPT-4o-mini
+- Each resume is scored 0-100 against the JD using Gemini 1.5 Flash (free tier)
 - Returns a ranked JSON list with: score, reasoning, strengths (list), gaps (list), recommendation (STRONG_YES/YES/MAYBE/NO)
 - Process resumes concurrently with asyncio.gather, batch size 10
 - Add exponential backoff retry (3 attempts) for OpenAI RateLimitError and APITimeoutError

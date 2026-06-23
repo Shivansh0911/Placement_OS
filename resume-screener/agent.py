@@ -4,22 +4,22 @@ import logging
 import time
 from typing import Optional
 
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage, HumanMessage
-from openai import RateLimitError, APITimeoutError, APIConnectionError
+from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable, DeadlineExceeded
 
 from models import ScreeningRequest, ScreeningResponse, CandidateScore, Recommendation
 from prompts import SYSTEM_PROMPT, SCORING_PROMPT
 
 logger = logging.getLogger(__name__)
 
-_llm: Optional[ChatOpenAI] = None
+_llm: Optional[ChatGoogleGenerativeAI] = None
 
 
-def get_llm() -> ChatOpenAI:
+def get_llm() -> ChatGoogleGenerativeAI:
     global _llm
     if _llm is None:
-        _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.1, request_timeout=30)
+        _llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.1, request_timeout=30)
     return _llm
 
 
@@ -75,10 +75,10 @@ async def _score_with_retry(
                 **data,
             )
 
-        except (RateLimitError, APITimeoutError, APIConnectionError) as e:
+        except (ResourceExhausted, ServiceUnavailable, DeadlineExceeded) as e:
             wait = 2 ** attempt
             logger.warning(
-                "OpenAI transient error for %s (attempt %d/%d): %s. Retrying in %ds.",
+                "Gemini transient error for %s (attempt %d/%d): %s. Retrying in %ds.",
                 resume_input.student_id,
                 attempt + 1,
                 max_retries,
@@ -88,7 +88,7 @@ async def _score_with_retry(
             if attempt < max_retries - 1:
                 await asyncio.sleep(wait)
             else:
-                return _neutral_score(resume_input, f"OpenAI unavailable after {max_retries} attempts.")
+                return _neutral_score(resume_input, f"Gemini unavailable after {max_retries} attempts.")
 
         except json.JSONDecodeError as e:
             logger.warning(
