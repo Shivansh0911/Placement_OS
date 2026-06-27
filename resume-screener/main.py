@@ -31,7 +31,7 @@ def health():
     return {
         "status": "ok",
         "service": "placement-resume-screener",
-        "openai_key_set": bool(os.getenv("OPENAI_API_KEY")),
+        "google_key_set": bool(os.getenv("GOOGLE_API_KEY")),
     }
 
 
