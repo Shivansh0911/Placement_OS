@@ -19,7 +19,7 @@ _llm: Optional[ChatGoogleGenerativeAI] = None
 def get_llm() -> ChatGoogleGenerativeAI:
     global _llm
     if _llm is None:
-        _llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.1, request_timeout=30)
+        _llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.1, request_timeout=45)
     return _llm
 
 
@@ -97,8 +97,8 @@ async def _score_with_retry(
             return _neutral_score(resume_input, "Could not parse model response. Manual review required.")
 
         except Exception as e:
-            logger.error("Unexpected error for %s: %s", resume_input.student_id, e)
-            return _neutral_score(resume_input, "Unexpected screening error. Manual review required.")
+            logger.error("Unexpected error for %s (%s): %s", resume_input.student_id, type(e).__name__, e)
+            return _neutral_score(resume_input, f"Screening error ({type(e).__name__}). Manual review required.")
 
     return _neutral_score(resume_input, "Max retries exceeded.")
 
