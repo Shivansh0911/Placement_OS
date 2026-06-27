@@ -186,7 +186,7 @@ placement-os/
 
 - UiPath Automation Cloud account (UiPath Labs access from the hackathon)
 - Python 3.11+
-- Google Gemini API key (free — get at https://aistudio.google.com)
+- Groq API key (free — get at https://console.groq.com)
 - SMTP credentials (Gmail app password works)
 - Google Calendar API credentials — OAuth2 (optional; email-only fallback built in)
 
