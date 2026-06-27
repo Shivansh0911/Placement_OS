@@ -19,7 +19,7 @@ _llm: Optional[ChatGoogleGenerativeAI] = None
 def get_llm() -> ChatGoogleGenerativeAI:
     global _llm
     if _llm is None:
-        _llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", temperature=0.1, request_timeout=45)
+        _llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.1, request_timeout=60)
     return _llm
 
 
@@ -49,6 +49,8 @@ async def _score_with_retry(
 
     for attempt in range(max_retries):
         try:
+            if attempt > 0:
+                await asyncio.sleep(35)
             response = await llm.ainvoke(messages)
             raw = response.content.strip()
 
@@ -76,18 +78,14 @@ async def _score_with_retry(
             )
 
         except (ResourceExhausted, ServiceUnavailable, DeadlineExceeded) as e:
-            wait = 2 ** attempt
             logger.warning(
-                "Gemini transient error for %s (attempt %d/%d): %s. Retrying in %ds.",
+                "Gemini rate limit for %s (attempt %d/%d): %s. Retrying in 35s.",
                 resume_input.student_id,
                 attempt + 1,
                 max_retries,
                 e,
-                wait,
             )
-            if attempt < max_retries - 1:
-                await asyncio.sleep(wait)
-            else:
+            if attempt >= max_retries - 1:
                 return _neutral_score(resume_input, f"Gemini unavailable after {max_retries} attempts.")
 
         except json.JSONDecodeError as e:
