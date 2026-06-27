@@ -77,7 +77,7 @@ PlacementOS fixes all of these. A drive that takes 2 weeks of coordinator effort
 
 | Component | Stack | Location |
 |---|---|---|
-| Resume Screener Agent | FastAPI + LangChain + GPT-4o-mini | `resume-screener/` |
+| Resume Screener Agent | FastAPI + LangChain + Google Gemini 1.5 Flash | `resume-screener/` |
 | Mock College ERP | FastAPI + JSON file store | `mock-erp/` |
 
 Both services were generated using **Claude Code** as part of **UiPath for Coding Agents**. See `docs/claude-code-demo.md` for the exact prompts and outputs.
@@ -175,11 +175,18 @@ placement-os/
 
 ---
 
+## Live Deployments
+
+| Service | URL |
+|---------|-----|
+| Resume Screener | https://placement-os-kceh.onrender.com |
+| Mock ERP | https://placement-os-1.onrender.com |
+
 ## Prerequisites
 
 - UiPath Automation Cloud account (UiPath Labs access from the hackathon)
 - Python 3.11+
-- OpenAI API key (for resume screener — GPT-4o-mini, costs ~$0.01 per drive)
+- Google Gemini API key (free — get at https://aistudio.google.com)
 - SMTP credentials (Gmail app password works)
 - Google Calendar API credentials — OAuth2 (optional; email-only fallback built in)
 
