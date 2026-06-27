@@ -1,6 +1,9 @@
 import logging
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
@@ -31,7 +34,7 @@ def health():
     return {
         "status": "ok",
         "service": "placement-resume-screener",
-        "google_key_set": bool(os.getenv("GOOGLE_API_KEY")),
+        "groq_key_set": bool(os.getenv("GROQ_API_KEY")),
     }
 
 

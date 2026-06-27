@@ -4,22 +4,21 @@ import logging
 import time
 from typing import Optional
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
-from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable, DeadlineExceeded
 
 from models import ScreeningRequest, ScreeningResponse, CandidateScore, Recommendation
 from prompts import SYSTEM_PROMPT, SCORING_PROMPT
 
 logger = logging.getLogger(__name__)
 
-_llm: Optional[ChatGoogleGenerativeAI] = None
+_llm: Optional[ChatGroq] = None
 
 
-def get_llm() -> ChatGoogleGenerativeAI:
+def get_llm() -> ChatGroq:
     global _llm
     if _llm is None:
-        _llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.1, request_timeout=60)
+        _llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.1)
     return _llm
 
 
@@ -77,16 +76,10 @@ async def _score_with_retry(
                 **data,
             )
 
-        except (ResourceExhausted, ServiceUnavailable, DeadlineExceeded) as e:
-            logger.warning(
-                "Gemini rate limit for %s (attempt %d/%d): %s. Retrying in 35s.",
-                resume_input.student_id,
-                attempt + 1,
-                max_retries,
-                e,
-            )
+        except Exception as e:
+            logger.warning("LLM error for %s (attempt %d/%d): %s", resume_input.student_id, attempt + 1, max_retries, e)
             if attempt >= max_retries - 1:
-                return _neutral_score(resume_input, f"Gemini unavailable after {max_retries} attempts.")
+                return _neutral_score(resume_input, f"LLM unavailable after {max_retries} attempts.")
 
         except json.JSONDecodeError as e:
             logger.warning(
